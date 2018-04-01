@@ -1,1 +1,2 @@
-PathToPhilosophy
+# PathToPhilosophy
+A project to touch up on my Python skills. Finds the shortest distance between two Wikipedia pages. It is a bit slow, and due to the use of sets, results can be inconsistent. However, despite inconsistent results, the output will always be correct. The first commandline argument is the start page, and the second commandline argument is the end page. Start page defaults to 'Python (programming language)' and end page defaults to 'Philosophy'. The program will then output the shortest path to the end page from the start page.

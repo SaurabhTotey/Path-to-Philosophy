@@ -20,6 +20,7 @@ def pages_with_name(name):
 def found_page(name):
     """
     Returns whether the page with the given name has been found
+    :param: the name of the page to check whether it exists yet
     :return: whether the page with the given name has been found
     """
     return len(pages_with_name(name)) > 0
@@ -52,7 +53,7 @@ class Page:
         """
         Gets the children of this Wikipedia page
         Will not re-pull children unless children have never been called for before (method is lazily evaluated)
-        :return:
+        :return: the pages that this page references or its children
         """
         if not hasattr(self, "children"):
             try:
