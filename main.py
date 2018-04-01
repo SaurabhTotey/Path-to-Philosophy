@@ -3,6 +3,7 @@ from functools import reduce
 import requests
 import sys
 
+# A set of all found pages
 foundPages = set()
 
 
@@ -59,4 +60,18 @@ def found_philosophy():
     return len(list(filter(lambda page: page.name == "Philosophy", foundPages))) > 0
 
 
+# Gets the start page
 startPage = Page(sys.argv[1] if len(sys.argv) > 1 else "Python (programming language)", None)
+
+# Gets pages descending from the start page until Philosophy is found
+while not found_philosophy():
+    for page in foundPages.copy():
+        page.referenced_pages()
+        if found_philosophy():
+            break
+
+# Gets the path to the start page from Philosophy
+pathToPhilosophy = [list(filter(lambda page: page.name == "Philosophy", foundPages))[0]]
+while pathToPhilosophy[0] != startPage:
+    pathToPhilosophy = [pathToPhilosophy[0].parent] + pathToPhilosophy
+print(pathToPhilosophy)
