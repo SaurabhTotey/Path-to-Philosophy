@@ -43,6 +43,13 @@ class Page:
                 self.children = None
         return self.children
 
+    def __repr__(self):
+        """
+        Represents the page as a string so that the page can be prettily printed
+        :return: The name of the page
+        """
+        return self.name
+
 
 startPage = Page(sys.argv[1] if len(sys.argv) > 1 else "Python (programming language)")
 print(nameToPage)
