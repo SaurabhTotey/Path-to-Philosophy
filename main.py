@@ -3,7 +3,7 @@ from functools import reduce
 import requests
 import sys
 
-nameToPage = {}
+foundPages = set()
 
 
 class Page:
@@ -11,17 +11,16 @@ class Page:
     A class that represents a Wikipedia page; doesn't find children unless necessary
     """
 
-    def __init__(self, name):
+    def __init__(self, name, parent):
         """
-        Makes a Wikipedia page given its name and registers it in the global dictionary of names to pages
+        Makes a Wikipedia page given its name and registers it in the global list of pages
         :param name: the name of the Wikipedia page: must exactly match
+        :param parent: the parent Page to this page
         """
-        global nameToPage
-        if name not in nameToPage:
-            self.name = name
-            nameToPage[name] = self
-        else:
-            del self
+        global foundPages
+        self.name = name
+        self.parent = parent
+        foundPages.add(self)
 
     def url(self):
         """
@@ -38,7 +37,7 @@ class Page:
         """
         if not hasattr(self, "children"):
             try:
-                self.children = {Page(link.attrs["title"]) for link in filter(lambda link: "title" in link.attrs, reduce(lambda all_a, current_p: (all_a if type(all_a) is list else [all_a]) + list(current_p.find_all("a")), BeautifulSoup(requests.get(self.url()).text, "lxml").body.find("div", id="content").find("div", id="bodyContent").find("div", id="mw-content-text").find_all("p")))}
+                self.children = {Page(link.attrs["title"], self) for link in filter(lambda link: "title" in link.attrs, reduce(lambda all_a, current_p: (all_a if type(all_a) is list else [all_a]) + list(current_p.find_all("a")), BeautifulSoup(requests.get(self.url()).text, "lxml").body.find("div", id="content").find("div", id="bodyContent").find("div", id="mw-content-text").find_all("p")))}
             except:
                 self.children = None
         return self.children
@@ -51,7 +50,13 @@ class Page:
         return self.name
 
 
-startPage = Page(sys.argv[1] if len(sys.argv) > 1 else "Python (programming language)")
-print(nameToPage)
-startPage.referenced_pages()
-print(nameToPage)
+def found_philosophy():
+    """
+    A function that returns whether philosophy has been yet reached by any of the pages
+    :return: a boolean on whether philosophy has been found
+    """
+    global foundPages
+    return len(list(filter(lambda page: page.name == "Philosophy", foundPages))) > 0
+
+
+startPage = Page(sys.argv[1] if len(sys.argv) > 1 else "Python (programming language)", None)
