@@ -72,7 +72,7 @@ class Page:
 
 # Sets the start page and the end page
 startPage = Page(sys.argv[1] if len(sys.argv) > 1 else "Python (programming language)", None)
-endPage = "Philosophy"
+endPage = sys.argv[2] if len(sys.argv) > 2 else "Philosophy"
 
 # Gets pages descending from the start page until the end page is found
 while not found_page(endPage):
