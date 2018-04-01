@@ -2,32 +2,49 @@ from bs4 import BeautifulSoup
 from functools import reduce
 import requests
 import sys
-from threading import Thread
+
+nameToPage = {}
 
 
-def subpages_of(page):
+class Page:
     """
-    Gets all the subpages or referenced pages from a given page name
-    :param page: the name of the page to find the subpages of
-    :return: a set of all the names of referenced pages
+    A class that represents a Wikipedia page; doesn't find children unless necessary
     """
-    def as_url(page_name):
-        return "https://en.wikipedia.org/wiki/" + page_name.replace(" ", "_")
 
-    try:
-        return {link.attrs["title"] for link in filter(lambda link: "title" in link.attrs, reduce(lambda all_a, current_p: (all_a if type(all_a) is list else [all_a]) + list(current_p.find_all("a")), BeautifulSoup(requests.get(as_url(page)).text, "lxml").body.find("div", id="content").find("div", id="bodyContent").find("div", id="mw-content-text").find_all("p")))}
-    except:
-        return None
+    def __init__(self, name):
+        """
+        Makes a Wikipedia page given its name and registers it in the global dictionary of names to pages
+        :param name: the name of the Wikipedia page: must exactly match
+        """
+        global nameToPage
+        if name not in nameToPage:
+            self.name = name
+            nameToPage[name] = self
+        else:
+            del self
+
+    def url(self):
+        """
+        Gets the URL of the page
+        :return: the URL of this Wikipedia page
+        """
+        return "https://en.wikipedia.org/wiki/" + self.name.replace(" ", "_")
+
+    def referenced_pages(self):
+        """
+        Gets the children of this Wikipedia page
+        Will not re-pull children unless children have never been called for before (method is lazily evaluated)
+        :return:
+        """
+        if not hasattr(self, "children"):
+            try:
+                self.children = {Page(link.attrs["title"]) for link in filter(lambda link: "title" in link.attrs, reduce(lambda all_a, current_p: (all_a if type(all_a) is list else [all_a]) + list(current_p.find_all("a")), BeautifulSoup(requests.get(self.url()).text, "lxml").body.find("div", id="content").find("div", id="bodyContent").find("div", id="mw-content-text").find_all("p")))}
+            except:
+                self.children = None
+        return self.children
 
 
-startPage = sys.argv[1] if len(sys.argv) > 1 else "Python (programming language)"
-pageBranches = {startPage: subpages_of(startPage)}
-while "Philosophy" not in pageBranches:
-    for page in list(pageBranches):
-        for referenced in pageBranches[page]:
-            if referenced in pageBranches:
-                continue
-            def add_pages():
-                pageBranches[referenced] = subpages_of(referenced)
-            Thread(target=add_pages())
-    print(pageBranches)
+startPage = Page(sys.argv[1] if len(sys.argv) > 1 else "Python (programming language)")
+print(nameToPage)
+startPage.referenced_pages()
+print(nameToPage)
