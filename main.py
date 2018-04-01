@@ -82,7 +82,7 @@ while not found_page(endPage):
             break
 
 # Gets the path to the start page from the end page
-pathToPhilosophy = [pages_with_name(endPage)[0]]
-while pathToPhilosophy[0] != startPage:
-    pathToPhilosophy = [pathToPhilosophy[0].parent] + pathToPhilosophy
-print(pathToPhilosophy)
+pathToEnd = [pages_with_name(endPage)[0]]
+while pathToEnd[0] != startPage:
+    pathToEnd = [pathToEnd[0].parent] + pathToEnd
+print(pathToEnd)
