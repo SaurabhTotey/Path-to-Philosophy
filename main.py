@@ -7,6 +7,24 @@ import sys
 foundPages = set()
 
 
+def pages_with_name(name):
+    """
+    A function that returns all pages with the given name
+    :param name: the name of the page to find
+    :return: a list of pages with the given name
+    """
+    global foundPages
+    return list(filter(lambda page: page.name == name, foundPages))
+
+
+def found_page(name):
+    """
+    Returns whether the page with the given name has been found
+    :return: whether the page with the given name has been found
+    """
+    return len(pages_with_name(name)) > 0
+
+
 class Page:
     """
     A class that represents a Wikipedia page; doesn't find children unless necessary
@@ -38,6 +56,7 @@ class Page:
         """
         if not hasattr(self, "children"):
             try:
+                # Yeah, this line is disgusting: gets the titles of all a tags within p tags within the content divs of the page
                 self.children = {Page(link.attrs["title"], self) for link in filter(lambda link: "title" in link.attrs, reduce(lambda all_a, current_p: (all_a if type(all_a) is list else [all_a]) + list(current_p.find_all("a")), BeautifulSoup(requests.get(self.url()).text, "lxml").body.find("div", id="content").find("div", id="bodyContent").find("div", id="mw-content-text").find_all("p")))}
             except:
                 self.children = None
@@ -51,27 +70,19 @@ class Page:
         return self.name
 
 
-def found_philosophy():
-    """
-    A function that returns whether philosophy has been yet reached by any of the pages
-    :return: a boolean on whether philosophy has been found
-    """
-    global foundPages
-    return len(list(filter(lambda page: page.name == "Philosophy", foundPages))) > 0
-
-
-# Gets the start page
+# Sets the start page and the end page
 startPage = Page(sys.argv[1] if len(sys.argv) > 1 else "Python (programming language)", None)
+endPage = "Philosophy"
 
-# Gets pages descending from the start page until Philosophy is found
-while not found_philosophy():
+# Gets pages descending from the start page until the end page is found
+while not found_page(endPage):
     for page in foundPages.copy():
         page.referenced_pages()
-        if found_philosophy():
+        if found_page(endPage):
             break
 
-# Gets the path to the start page from Philosophy
-pathToPhilosophy = [list(filter(lambda page: page.name == "Philosophy", foundPages))[0]]
+# Gets the path to the start page from the end page
+pathToPhilosophy = [pages_with_name(endPage)[0]]
 while pathToPhilosophy[0] != startPage:
     pathToPhilosophy = [pathToPhilosophy[0].parent] + pathToPhilosophy
 print(pathToPhilosophy)
